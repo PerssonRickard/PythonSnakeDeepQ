@@ -39,11 +39,12 @@ while 1:
                     globalVariables.pending_snake_direction = 2
 
 
-    rendering.render()
 
     if tick_count >= update_interval:
         logic.update()
         tick_count = 0
+
+    rendering.render()
 
     tick_count += 1
     clock.tick(globalVariables.fps)

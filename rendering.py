@@ -7,8 +7,8 @@ red = 255, 0, 0
 
 def render():
     globalVariables.screen.fill(black)
-    renderSnake()
     renderApple()
+    renderSnake()
     pygame.display.flip()
 
 def renderSnake():
