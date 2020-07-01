@@ -18,9 +18,21 @@ pygame.display.set_caption('Snake')
 update_interval = max(60-globalVariables.snake_speed, 0) # How many frames per update (assuming a fps of 60)
 globalVariables.snake_list = logic.createSnakeList()
 
-tick_count = 0
 
+def step():
+    logic.update()
+    reward = 10
+
+    rendering.render()
+    window_pixel_matrix = pygame.surfarray.pixels3d(globalVariables.screen)
+    
+    return reward, window_pixel_matrix
+
+
+
+# Game Loop
 while 1:
+
     for event in pygame.event.get():
         if event.type == pygame.QUIT: sys.exit()
 
@@ -37,17 +49,12 @@ while 1:
             elif event.key == pygame.K_DOWN:
                 if globalVariables.snake_direction != 0:
                     globalVariables.pending_snake_direction = 2
+    
 
+    reward, screen = step()
 
-
-    if tick_count >= update_interval:
-        logic.update()
-        tick_count = 0
-
-    rendering.render()
-
-    tick_count += 1
-    clock.tick(globalVariables.fps)
+    #clock.tick(globalVariables.fps) # Use for rendering and showing the game
+    clock.tick() # Don't delay framerate when not rendering
 
 
 pygame.quit()

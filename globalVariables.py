@@ -1,5 +1,6 @@
 fps = 60
 grid_size = grid_width, grid_height = 32, 26
+numberOfIterations = 0
 
 snake_block_size = 25
 initial_snake_length = 4

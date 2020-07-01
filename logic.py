@@ -11,6 +11,8 @@ def update():
     updateSnakeList()
 
     if isGameOver:
+        print("Game over, ", globalVariables.numberOfIterations)
+        globalVariables.numberOfIterations = globalVariables.numberOfIterations + 1
         resetGame()
 
 
