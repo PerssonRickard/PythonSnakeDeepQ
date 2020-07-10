@@ -1,5 +1,8 @@
 import globalVariables
 import pygame
+import torch
+import numpy as np
+from PIL import Image
 
 black = 0, 0, 0
 white = 255, 255, 255
@@ -10,6 +13,11 @@ def render():
     renderApple()
     renderSnake()
     pygame.display.flip()
+
+    window_pixel_matrix = pygame.surfarray.pixels3d(globalVariables.screen)
+    window_pixel_matrix_tensor = torch.from_numpy(np.copy(window_pixel_matrix))
+
+    return window_pixel_matrix_tensor
 
 def renderSnake():
     for snake_body_pos in globalVariables.snake_list:

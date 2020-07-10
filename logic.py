@@ -3,17 +3,44 @@ import globalVariables
 
 
 def update():
-    globalVariables.snake_direction = globalVariables.pending_snake_direction
+
+    if globalVariables.pending_snake_direction == 0:
+        if globalVariables.snake_direction != 2:
+            globalVariables.snake_direction = globalVariables.pending_snake_direction
+    elif globalVariables.pending_snake_direction == 1:
+        if globalVariables.snake_direction != 3:
+            globalVariables.snake_direction = globalVariables.pending_snake_direction
+    elif globalVariables.pending_snake_direction == 2:
+        if globalVariables.snake_direction != 0:
+            globalVariables.snake_direction = globalVariables.pending_snake_direction
+    elif globalVariables.pending_snake_direction == 3:
+        if globalVariables.snake_direction != 1:
+            globalVariables.snake_direction = globalVariables.pending_snake_direction
 
     isGameOver = checkIfGameOver()
 
-    checkIfAteApple()
+    ateApple = checkIfAteApple()
     updateSnakeList()
 
+    if ateApple:
+        globalVariables.snake_length += 1
+        updateApplePos()
+
+    reward = -0.05 #-0.005
+    if ateApple:
+        reward = reward + 1
+        print("Got apple!")
+    elif isGameOver:
+        reward = reward - 1
+
+    isTerminalState = False
     if isGameOver:
-        print("Game over, ", globalVariables.numberOfIterations)
-        globalVariables.numberOfIterations = globalVariables.numberOfIterations + 1
+        isTerminalState = True
+        print("Game over, Episode number:", globalVariables.numberOfEpisodes)
+        globalVariables.numberOfEpisodes = globalVariables.numberOfEpisodes + 1
         resetGame()
+
+    return reward, isTerminalState
 
 
 def updateSnakeList():
@@ -49,16 +76,21 @@ def updateSnakeList():
 
 def updateApplePos():
 
-    combinations = [[x, y] for x in range(globalVariables.grid_width) for y in range(globalVariables.grid_height-1)]
+    combinations = [[x, y] for x in range(globalVariables.grid_width) for y in range(globalVariables.grid_height)]
     for position in globalVariables.snake_list:
         if position in combinations:
             combinations.remove(position)
 
-    pos = random.choice(combinations)
+    if combinations != []:
+        pos = random.choice(combinations)
+    else:
+        pos = [0, 0]
     
     globalVariables.apple_pos_x, globalVariables.apple_pos_y =  pos[0], pos[1]
 
 def checkIfAteApple():
+    ateApple = False
+
     snake_head_pos = globalVariables.snake_list[0][:]
 
     if globalVariables.snake_direction == 0:
@@ -71,8 +103,9 @@ def checkIfAteApple():
         snake_head_pos[0] = snake_head_pos[0] + -1
     
     if snake_head_pos == [globalVariables.apple_pos_x, globalVariables.apple_pos_y]:
-        globalVariables.snake_length += 1
-        updateApplePos()
+        ateApple = True
+
+    return ateApple
 
 def checkIfGameOver():
     isGameOver = False
@@ -99,6 +132,7 @@ def checkIfGameOver():
     return isGameOver
 
 def resetGame():
+
     globalVariables.snake_list = createSnakeList()
     while(not checkIfSnakeListFeasible(globalVariables.snake_list)):
         globalVariables.snake_list = createSnakeList()
@@ -113,16 +147,16 @@ def createSnakeList():
     initial_snake_head_pos_x = random.randint(0, globalVariables.grid_width-1)
     initial_snake_head_pos_y = random.randint(0, globalVariables.grid_height-1)
 
-    globalVariables.initial_snake_direction = random.randint(0, 3)
-    globalVariables.pending_snake_direction = globalVariables.initial_snake_direction
+    globalVariables.snake_direction = random.randint(0, 3)
+    globalVariables.pending_snake_direction = globalVariables.snake_direction
 
-    if globalVariables.initial_snake_direction == 0:
+    if globalVariables.snake_direction == 0:
         snake_list = [[initial_snake_head_pos_x, initial_snake_head_pos_y + i] for i in range(globalVariables.initial_snake_length)]
-    elif globalVariables.initial_snake_direction == 1:
+    elif globalVariables.snake_direction == 1:
         snake_list = [[initial_snake_head_pos_x - i, initial_snake_head_pos_y] for i in range(globalVariables.initial_snake_length)]
-    elif globalVariables.initial_snake_direction == 2:
+    elif globalVariables.snake_direction == 2:
         snake_list = [[initial_snake_head_pos_x, initial_snake_head_pos_y - i] for i in range(globalVariables.initial_snake_length)]
-    elif globalVariables.initial_snake_direction == 3:
+    elif globalVariables.snake_direction == 3:
         snake_list = [[initial_snake_head_pos_x + i, initial_snake_head_pos_y] for i in range(globalVariables.initial_snake_length)]
 
     return snake_list
