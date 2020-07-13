@@ -1,0 +1,91 @@
+astroid==2.2.5
+attrs==19.3.0
+backcall==0.2.0
+bleach==3.1.5
+brotlipy==0.7.0
+certifi==2020.6.20
+cffi==1.14.0
+chardet==3.0.4
+cloudpickle @ file:///tmp/build/80754af9/cloudpickle_1594141588948/work
+colorama==0.4.1
+cryptography==2.9.2
+cycler==0.10.0
+cytoolz==0.10.1
+dask @ file:///tmp/build/80754af9/dask-core_1594156306305/work
+decorator==4.4.2
+defusedxml==0.6.0
+entrypoints==0.3
+idna @ file:///tmp/build/80754af9/idna_1593446292537/work
+imagecodecs-lite @ file:///D:/bld/imagecodecs-lite_1591047470868/work
+imageio @ file:///tmp/build/80754af9/imageio_1594161405741/work
+importlib-metadata @ file:///C:/ci/importlib-metadata_1593446525189/work
+ipykernel==5.3.0
+ipython @ file:///C:/ci/ipython_1593433781269/work
+ipython-genutils==0.2.0
+isort==4.3.21
+jedi @ file:///C:/ci/jedi_1592833832328/work
+Jinja2==2.11.2
+json5==0.9.5
+jsonschema==3.2.0
+jupyter-client @ file:///tmp/build/80754af9/jupyter_client_1594163838128/work
+jupyter-core==4.6.3
+jupyterlab==2.1.4
+jupyterlab-server @ file:///tmp/build/80754af9/jupyterlab_server_1594164409481/work
+kiwisolver==1.2.0
+lazy-object-proxy==1.4.1
+MarkupSafe==1.1.1
+matplotlib @ file:///C:/ci/matplotlib-base_1592846084747/work
+mccabe==0.6.1
+mistune==0.8.4
+mkl-fft==1.1.0
+mkl-random==1.1.1
+mkl-service==2.3.0
+nbconvert==5.6.1
+nbformat==5.0.7
+networkx==2.4
+notebook @ file:///D:/bld/notebook_1588887315004/work
+numpy==1.18.5
+olefile==0.46
+opencv-contrib-python==3.4.2.16
+packaging==20.4
+pandocfilters==1.4.2
+parso==0.7.0
+pickleshare==0.7.5
+Pillow @ file:///C:/ci/pillow_1594298234712/work
+prometheus-client==0.8.0
+prompt-toolkit==3.0.5
+pycparser==2.20
+pygame==1.9.6
+Pygments==2.6.1
+pylint==2.3.1
+pyOpenSSL==19.1.0
+pyparsing==2.4.7
+pyrsistent==0.16.0
+PySocks==1.7.1
+python-dateutil==2.8.1
+PyWavelets==1.1.1
+pywin32==227
+pywinpty==0.5.7
+PyYAML==5.3.1
+pyzmq==19.0.1
+requests @ file:///tmp/build/80754af9/requests_1592841827918/work
+scikit-image==0.17.2
+scipy @ file:///C:/ci/scipy_1592916958183/work
+Send2Trash==1.5.0
+six==1.12.0
+terminado==0.8.3
+testpath==0.4.4
+tifffile @ file:///home/conda/feedstock_root/build_artifacts/tifffile_1591280222285/work
+toolz==0.10.0
+torch==1.5.1
+torchvision==0.6.1
+tornado==6.0.4
+traitlets==4.3.3
+typed-ast==1.4.0
+urllib3==1.25.9
+wcwidth @ file:///tmp/build/80754af9/wcwidth_1593447189090/work
+webencodings==0.5.1
+win-inet-pton==1.1.0
+wincertstore==0.2
+wrapt==1.11.2
+zipp==3.1.0
