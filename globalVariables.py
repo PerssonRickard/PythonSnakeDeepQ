@@ -39,4 +39,4 @@ line1 = []
 fig = None
 ax = None
 
-pretrained = False
+pretrained = True
