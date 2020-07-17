@@ -130,7 +130,7 @@ globalVariables.deepQNetwork1.to(device)
 globalVariables.deepQNetwork2.to(device)
 
 if globalVariables.pretrained:
-    globalVariables.deepQNetwork1.load_state_dict(torch.load('C:/Users/Rickard/Documents/python/MachineLearning/PythonSnakeDeepQ/savedNetworks/network12times8OptimalRewards2.pt'))
+    globalVariables.deepQNetwork1.load_state_dict(torch.load('C:/Users/Rickard/Documents/python/MachineLearning/PythonSnakeDeepQ/savedNetworks/network12times8OptimalRewards6.pt'))
 
 # Set the starting parameters to be the same for both networks
 globalVariables.deepQNetwork2.load_state_dict(globalVariables.deepQNetwork1.state_dict())
@@ -138,7 +138,7 @@ globalVariables.deepQNetwork2.load_state_dict(globalVariables.deepQNetwork1.stat
 optimizer1 = optim.SGD(globalVariables.deepQNetwork1.parameters(), lr=globalVariables.learningRate, momentum=0.9)
 optimizer2 = optim.SGD(globalVariables.deepQNetwork1.parameters(), lr=globalVariables.learningRate, momentum=0.9)
 
-lossFunction = nn.MSELoss() # Use reduction = sum ?
+lossFunction = nn.MSELoss()
 
 def greedy(state):
 
@@ -279,7 +279,7 @@ def plotStatistics(fig, ax, line1, qValueRollingAverage, ax2, line2):
 
 discountFactor = 0.95
 startingEpsilon = 0.1
-endingEpsilon = 0.1
+endingEpsilon = 0.05
 stepEpsilon = (startingEpsilon - endingEpsilon)/100000 #1000000
 oldState = None
 qValueRollingAverage = None
