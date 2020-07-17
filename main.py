@@ -1,5 +1,5 @@
 import sys
-import pygame
+#import pygame
 import rendering
 import logic
 import random
@@ -17,10 +17,16 @@ import matplotlib.pyplot as plt
 import torch.optim as optim
 from collections import deque
 from qLearning import ReplayMemory
+import tkinter as tk
+from tkinter import *
+from PIL import Image, ImageTk, ImageDraw
 
-pygame.init()
 
-clock = pygame.time.Clock()
+running = True
+globalVariables.window = tk.Tk()
+#pygame.init()
+
+#clock = pygame.time.Clock()
 
 if torch.cuda.is_available():
     device = torch.device('cuda')
@@ -29,22 +35,38 @@ else:
     device = torch.device('cpu')
     print('Using CPU')
 
-globalVariables.screen = pygame.display.set_mode(globalVariables.size)
+#globalVariables.screen = pygame.display.set_mode(globalVariables.size)
 logic.updateApplePos()
-pygame.display.set_caption('Snake')
+globalVariables.window.title('Snake')
+
+def handle_closing_event():
+    global running
+    running = False
+
+globalVariables.window.protocol("WM_DELETE_WINDOW", handle_closing_event)
+#pygame.display.set_caption('Snake')
+
+globalVariables.image = Image.new('L', globalVariables.size, color='black')
+globalVariables.screenDraw = ImageDraw.Draw(globalVariables.image)
+imageTk = ImageTk.PhotoImage(globalVariables.image)
+globalVariables.screen = Label(globalVariables.window, image=imageTk)
+globalVariables.screen.grid(row=0, column=0)
+globalVariables.screen.pack()
 
 globalVariables.snake_list = logic.createSnakeList()
 
+visualize = False
+
 # Render the initial frame
-rendering.render()
+rendering.render(visualize)
 
 
 def initializeState():
 
-    window_pixel_matrix = pygame.surfarray.pixels3d(globalVariables.screen)
-    screen = torch.from_numpy(np.copy(window_pixel_matrix))
+    #window_pixel_matrix = pygame.surfarray.pixels3d(globalVariables.screen)
+    #screen = torch.from_numpy(np.copy(window_pixel_matrix))
 
-    resizedScreen = preprocessInput(screen)
+    #resizedScreen = preprocessInput(screen)
 
 
     '''
@@ -55,9 +77,13 @@ def initializeState():
     
     '''
 
-    stackedFrames = torch.tensor(np.zeros((1, 3, 116, 94)), dtype=torch.float32)
-    test = resizedScreen.detach().clone()
-    stackedFrames = torch.cat((test, stackedFrames), 1)
+    stackedFrames = torch.tensor(np.zeros((1, 3, globalVariables.width, globalVariables.height)), dtype=torch.float32)
+
+    tensorTransform = transforms.ToTensor()
+    window_pixel_tensor = tensorTransform(globalVariables.image).permute(0, 2, 1).unsqueeze(1)
+
+    #test = resizedScreen.detach().clone()
+    stackedFrames = torch.cat((window_pixel_tensor, stackedFrames), 1)
 
     return stackedFrames
 
@@ -278,7 +304,7 @@ def plotStatistics(fig, ax, line1, qValueRollingAverage, ax2, line2):
 
 
 discountFactor = 0.95
-startingEpsilon = 0.1
+startingEpsilon = 1
 endingEpsilon = 0.1
 stepEpsilon = (startingEpsilon - endingEpsilon)/100000 #1000000
 oldState = None
@@ -296,9 +322,22 @@ fig.canvas.draw()
 
 globalVariables.epsilon = startingEpsilon
 
-# Game Loop
-while 1:
+while running:
 
+    screen = rendering.render(visualize)
+
+    #time.sleep(0.01)
+
+    logic.update()
+    
+    # Update the graphics of the window
+    globalVariables.window.update()
+
+
+# Game Loop
+while running:
+
+    '''
     for event in pygame.event.get():
         if event.type == pygame.QUIT: 
             
@@ -322,6 +361,8 @@ while 1:
             elif event.key == pygame.K_DOWN:
                 if globalVariables.snake_direction != 0:
                     globalVariables.pending_snake_direction = 2
+
+    '''
     
 
     action, qValues = epsilonGreedy(stackedFrames, globalVariables.epsilon)
@@ -330,10 +371,10 @@ while 1:
     reward, screen, isTerminalState = step(action)
 
     # Preprocess the frame
-    resizedScreen = preprocessInput(screen)
+    #resizedScreen = preprocessInput(screen)
 
     # Add the new frame to the stacked frames
-    stackedFrames = updateState(stackedFrames, resizedScreen)
+    stackedFrames = updateState(stackedFrames, screen)
 
     # Store transition in replay memory
     if oldState is not None:
@@ -375,11 +416,19 @@ while 1:
     #plt.pause(1)
 
 
-    if globalVariables.epsilon == 0: # or globalVariables.numberOfEpisodes >= 40000:
-        clock.tick(10)
+    #if globalVariables.epsilon == 0: # or globalVariables.numberOfEpisodes >= 40000:
+    #    clock.tick(10)
 
     #clock.tick(globalVariables.fps) # Use for rendering and showing the game
-    clock.tick() # Don't delay framerate when not rendering
+    #clock.tick() # Don't delay framerate when not rendering
 
+    # Update the graphics of the window
+    globalVariables.window.update()
+
+
+if globalVariables.deepQNetwork1Frozen:
+    torch.save(globalVariables.deepQNetwork2.state_dict(), 'C:/Users/Rickard/Documents/python/MachineLearning/PythonSnakeDeepQ/savedNetworks/network6times4.pt')
+else:
+    torch.save(globalVariables.deepQNetwork1.state_dict(), 'C:/Users/Rickard/Documents/python/MachineLearning/PythonSnakeDeepQ/savedNetworks/network6times4.pt')
 
 pygame.quit()
