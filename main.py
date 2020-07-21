@@ -135,15 +135,22 @@ class deepQNetwork(nn.Module):
     def __init__(self):
         super(deepQNetwork, self).__init__()
 
+        '''
         self.conv1 = nn.Conv2d(4, 16, 8, stride=4)
         self.conv2 = nn.Conv2d(16, 32, 4, stride=2)
-        self.fc1 = nn.Linear(32*13*10, 256)
+        self.fc1 = nn.Linear(64, 256)
+        self.fc2 = nn.Linear(256, 4)
+        '''
+
+        self.conv1 = nn.Conv2d(4, 16, 3)
+        self.conv2 = nn.Conv2d(16, 32, 4)
+        self.fc1 = nn.Linear(32*7*3, 256)
         self.fc2 = nn.Linear(256, 4)
 
     def forward(self, x):
         x = F.relu(self.conv1(x))
         x = F.relu(self.conv2(x))
-        x = x.view(-1, 32*13*10)
+        x = x.view(-1, 32*7*3)
         x = F.relu(self.fc1(x))
         x = self.fc2(x)
         return x
@@ -207,7 +214,7 @@ def step(action):
     globalVariables.score = globalVariables.score + reward
 
     # Render the next frame
-    screen = rendering.render()
+    screen = rendering.render(visualize)
 
     # Update the number of steps counter
     globalVariables.numberOfSteps = globalVariables.numberOfSteps + 1
@@ -219,7 +226,7 @@ def step(action):
 def calculateQLearningTargets(sampledMiniBatch):
 
     with torch.no_grad():
-        qLearningTargets = torch.zeros(globalVariables.miniBatchSize).to(device)
+        #qLearningTargets = torch.zeros(globalVariables.miniBatchSize).to(device)
 
         rewards = sampledMiniBatch[2]
         nextStates = sampledMiniBatch[3]
@@ -312,16 +319,20 @@ qValueRollingAverage = None
 replayMemory = ReplayMemory(globalVariables.replayMemorySize, device)
 
 # Initialize statistics plot
+'''
 plt.ion()
 fig, (ax, ax2) = plt.subplots(2, 1)
 line1, = ax.plot([], globalVariables.loggedScores)
 line2, = ax2.plot([], [])
 fig.show()
 fig.canvas.draw()
+'''
 
 
 globalVariables.epsilon = startingEpsilon
 
+
+'''
 while running:
 
     screen = rendering.render(visualize)
@@ -332,6 +343,7 @@ while running:
     
     # Update the graphics of the window
     globalVariables.window.update()
+'''
 
 
 # Game Loop
@@ -397,20 +409,23 @@ while running:
 
     # If the state is a terminal state then the episode has ended, plot score of episode
     if isTerminalState:
-        print(globalVariables.score, globalVariables.epsilon)
         globalVariables.loggedScores.append(globalVariables.score)
         qAverage = np.mean(np.array(globalVariables.qBuffer))
         globalVariables.loggedAverageQValues.append(qAverage)
-        globalVariables.score = 0
-        globalVariables.qBuffer = []
-        stackedFrames = initializeState()
 
         if qValueRollingAverage is not None:
             qValueRollingAverage = qValueRollingAverage + 0.05*(qAverage - qValueRollingAverage)
         else:
             qValueRollingAverage = qAverage
 
-        plotStatistics(fig, ax, line1, qValueRollingAverage, ax2, line2)
+        print(globalVariables.score, globalVariables.epsilon, globalVariables.numberOfSteps, "Rolling average Q-value:", qValueRollingAverage)
+        #plotStatistics(fig, ax, line1, qValueRollingAverage, ax2, line2)
+
+        globalVariables.score = 0
+        globalVariables.qBuffer = []
+        stackedFrames = initializeState()
+
+        
 
     #plotFrame(stackedFrames)
     #plt.pause(1)
@@ -431,4 +446,4 @@ if globalVariables.deepQNetwork1Frozen:
 else:
     torch.save(globalVariables.deepQNetwork1.state_dict(), 'C:/Users/Rickard/Documents/python/MachineLearning/PythonSnakeDeepQ/savedNetworks/network6times4.pt')
 
-pygame.quit()
+#pygame.quit()
