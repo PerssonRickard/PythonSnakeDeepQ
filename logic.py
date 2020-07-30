@@ -31,7 +31,7 @@ def update():
         reward = reward + 1
         print("Got apple!")
     elif isGameOver:
-        reward = reward - 1
+        reward = reward - 10
 
     isTerminalState = False
     if isGameOver:

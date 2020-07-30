@@ -22,7 +22,7 @@ apple_pos_x, apple_pos_y = None, None
 score = 0
 loggedScores = []
 loggedAverageQValues = []
-qBuffer = []
+qMaxBuffer = []
 
 deepQNetwork1 = None
 deepQNetwork2 = None
