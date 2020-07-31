@@ -1,7 +1,5 @@
 fps = 30
-downSampleWidth = 116
-downSampleHeight = 94
-grid_size = grid_width, grid_height = 12, 8 #6, 4  #32, 26
+grid_size = grid_width, grid_height = 12, 8 #12, 8 #6, 4  #32, 26
 numberOfEpisodes = 0
 
 snake_block_size = 25
@@ -24,19 +22,10 @@ loggedScores = []
 loggedAverageQValues = []
 qMaxBuffer = []
 
-deepQNetwork1 = None
-deepQNetwork2 = None
-replayMemorySize = 2500
-deepQNetwork1Frozen = False
-epsilon = 1
-numberOfEpochs = 2
-numberStepsSwitchQNetwork = 512 #2500
 numberOfSteps = 0
-miniBatchSize = 32
-learningRate = 1e-4 #1e-5
 
-line1 = []
-fig = None
-ax = None
+#line1 = []
+#fig = None
+#ax = None
 
 pretrained = True

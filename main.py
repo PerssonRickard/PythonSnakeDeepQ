@@ -2,6 +2,7 @@ import sys
 import pygame
 import rendering
 import logic
+import snake
 import random
 import time
 import globalVariables
@@ -29,36 +30,7 @@ else:
     device = torch.device('cpu')
     print('Using CPU')
 
-globalVariables.screen = pygame.display.set_mode(globalVariables.size)
-logic.updateApplePos()
-pygame.display.set_caption('Snake')
-
-globalVariables.snake_list = logic.createSnakeList()
-
-# Render the initial frame
-rendering.render()
-
-def plotFrame(frame):
-    # Used for debugging, plots the given frame
-
-    if frame.size(1) == 1:
-        plt.imshow(frame.squeeze(), cmap='gray')
-        plt.show()
-    else:
-        fig=plt.figure(figsize=(1, 4))
-
-        fig.add_subplot(1, 4, 1)
-        plt.imshow(frame[:,0,:,:].squeeze(), cmap='gray')
-        fig.add_subplot(1, 4, 2)
-        plt.imshow(frame[:,1,:,:].squeeze(), cmap='gray')
-        fig.add_subplot(1, 4, 3)
-        plt.imshow(frame[:,2,:,:].squeeze(), cmap='gray')
-        fig.add_subplot(1, 4, 4)
-        plt.imshow(frame[:,3,:,:].squeeze(), cmap='gray')
-
-        plt.show()
-
-
+snake.initalizeGame(pygame)
 
 class DeepQNetwork(nn.Module):
     def __init__(self):
@@ -80,87 +52,40 @@ class DeepQNetwork(nn.Module):
 
 # Load a pretrained network
 if globalVariables.pretrained:
-    pretrainedPath = 'C:/Users/Rickard/Documents/python/MachineLearning/PythonSnakeDeepQ/savedNetworks/network12times8FinalNewRewards.pt'
-
+    pretrainedPath = 'savedNetworks/network12times8Final3.pt'
+else:
+    pretrainedPath = None
 
 # Parameter settings
 discountFactor = 0.95
 startingEpsilon = 0.1
-endingEpsilon = 0.05
+endingEpsilon = 0.01
 numberStepsDecreasingEpsilon = 1e5 #1000000
+replayMemorySize = 1e4 #2500
+numberStepsSwitchQNetwork = 512 #2500
+miniBatchSize = 32
+learningRate = 1e-4 #1e-5
+downSampleWidth = 116
+downSampleHeight = 94
+
+# Initialize variables
 oldState = None
 qValueRollingAverage = None
-replayMemory = ReplayMemory(globalVariables.replayMemorySize, device)
 
-# Define the Q-network
-QLearning = QLearning(DeepQNetwork, discountFactor, globalVariables.learningRate, globalVariables.miniBatchSize, 
-    globalVariables.numberStepsSwitchQNetwork, startingEpsilon, endingEpsilon, numberStepsDecreasingEpsilon, globalVariables.downSampleWidth, 
-    globalVariables.downSampleHeight, device=device, pretrainedPath=pretrainedPath)
+# Initialize replay memory
+replayMemory = ReplayMemory(replayMemorySize, device, fastImplementation=True)
 
+# Define the Q-network and Q-learning parameters
+qLearning = QLearning(DeepQNetwork, discountFactor, learningRate, miniBatchSize, 
+    numberStepsSwitchQNetwork, startingEpsilon, endingEpsilon, numberStepsDecreasingEpsilon, 
+    device=device, pretrainedPath=pretrainedPath)
 
-# Get the current frame of the game
-window_pixel_matrix = pygame.surfarray.pixels3d(globalVariables.screen)
-screen = torch.from_numpy(np.copy(window_pixel_matrix))
-stackedFrames = QLearning.initializeState(screen)
-
-
-def step(action):
-    
-    # Take the selected action
-    globalVariables.pending_snake_direction = action
-
-    # Take step and receive reward
-    reward, isTerminalState = logic.update()
-
-    # Add reward to score
-    globalVariables.score = globalVariables.score + reward
-
-    # Render the next frame
-    screen = rendering.render()
-
-    # Update the number of steps counter
-    globalVariables.numberOfSteps = globalVariables.numberOfSteps + 1
-
-    # Update epsilon (decreases as to reduce the amount of exploration over time)
-    QLearning.stepEpsilon()
-
-    return reward, screen, isTerminalState
-
-def train():
-
-    # Sample a mini-batch of experience
-    sampledMiniBatch = replayMemory.sampleMiniBatch(globalVariables.miniBatchSize)
-
-    # Calculate the Q-learning targets
-    qLearningTargets = QLearning.calculateQLearningTargets(sampledMiniBatch)
-
-    # Extract components of the mini-batch
-    states = sampledMiniBatch[0]
-    actions = sampledMiniBatch[1]
-
-    # Zero the optimizer gradients
-    QLearning.zeroOptimizerGrad()
-
-    # Perform a forward-pass of the Q-network
-    qValuesAll = QLearning.forwardProp(states)
-
-    # Only keep the Q-values corresponding to actions that we actually did take
-    qValues = torch.zeros(globalVariables.miniBatchSize).to(device)
-    for i in range(globalVariables.miniBatchSize):
-        action = actions[i]
-        qValues[i] = qValuesAll[i, action]
-
-    # Compute the loss
-    loss = QLearning.lossFunction(qValues, qLearningTargets)
-
-    # Perform backpropagation to obtain the gradients
-    loss.backward()
-
-    # Perform an update step of the Q-network
-    QLearning.stepOptimizer()
+# Get the current frame of the game and initialize the state
+frame = snake.getGameFrame(pygame)
+stackedFrames = qLearning.initializeState(frame)
 
 
-
+'''
 def plotStatistics(fig, ax, line1, qValueRollingAverage, ax2, line2):
 
     line1.set_xdata(np.append(line1.get_xdata(), len(globalVariables.loggedAverageQValues)-1))
@@ -176,7 +101,7 @@ def plotStatistics(fig, ax, line1, qValueRollingAverage, ax2, line2):
     fig.canvas.draw()
     
 
-'''
+
 # Initialize statistics plot
 plt.ion()
 fig, (ax, ax2) = plt.subplots(2, 1)
@@ -193,58 +118,49 @@ while 1:
         if event.type == pygame.QUIT: 
             
             # When the application is closed save the Q-network
-            if QLearning.deepQNetwork1Frozen:
-                torch.save(QLearning.deepQNetwork2.state_dict(), 'C:/Users/Rickard/Documents/python/MachineLearning/PythonSnakeDeepQ/savedNetworks/network6times4.pt')
+            if qLearning.deepQNetwork1Frozen:
+                torch.save(qLearning.deepQNetwork2.state_dict(), 'savedNetworks/savedNetwork.pt')
             else:
-                torch.save(QLearning.deepQNetwork1.state_dict(), 'C:/Users/Rickard/Documents/python/MachineLearning/PythonSnakeDeepQ/savedNetworks/network6times4.pt')
+                torch.save(qLearning.deepQNetwork1.state_dict(), 'savedNetworks/savedNetwork.pt')
 
             sys.exit()
 
         # Event-handling for keyboard input when a human plays the game
-        if event.type == pygame.KEYDOWN:
-            if event.key == pygame.K_LEFT:
-                if globalVariables.snake_direction != 1:
-                    globalVariables.pending_snake_direction = 3
-            elif event.key == pygame.K_RIGHT:
-                if globalVariables.snake_direction != 3:
-                    globalVariables.pending_snake_direction = 1
-            elif event.key == pygame.K_UP:
-                if globalVariables.snake_direction != 2:
-                    globalVariables.pending_snake_direction = 0
-            elif event.key == pygame.K_DOWN:
-                if globalVariables.snake_direction != 0:
-                    globalVariables.pending_snake_direction = 2
+        logic.handleKeyboardInput(event)
     
 
     # Select the action from an epsilon-greedy policy
-    action, qValues = QLearning.epsilonGreedy(stackedFrames)
+    action, qValues = qLearning.epsilonGreedy(stackedFrames)
 
     # Save the Q-values
     globalVariables.qMaxBuffer.append(qValues.cpu().detach().numpy().max())
 
     # Take a step with the selected action, recieve a reward, new scree-frame 
     # and if a terminal state has been reached (i.e. game over)
-    reward, screen, isTerminalState = step(action)
+    reward, frame, isTerminalState = snake.step(action)
+
+    # Update epsilon (decreases as to reduce the amount of exploration over time)
+    qLearning.stepEpsilon()
 
     # Preprocess the frame
-    resizedScreen = QLearning.preprocessInput(screen)
+    resizedframe = qLearning.preprocessInput(frame)
 
     # Add the new frame to the stacked frames
-    stackedFrames = QLearning.updateState(stackedFrames, resizedScreen)
+    stackedFrames = qLearning.updateState(stackedFrames, resizedframe)
 
     # Store transition in replay memory
     if oldState is not None:
         replayMemory.addTransition(oldState, action, reward, stackedFrames, isTerminalState)
     oldState = stackedFrames
 
-    # When the replay-memory has been filled, start training
-    if replayMemory.currentSize >= replayMemory.memorySize:
-        train()
+    # When the replay-memory is of sufficient size, start training
+    if replayMemory.currentSize >= miniBatchSize: #replayMemory.currentSize >= replayMemory.memorySize:
+        qLearning.train(replayMemory)
 
     # The "fixed Q-targets"-idea from the "Playing Atari with Deep Reinforcement Learning"-paper
-    if globalVariables.numberOfSteps % QLearning.numberStepsSwitchQNetwork == 0:
+    if globalVariables.numberOfSteps % qLearning.numberStepsSwitchQNetwork == 0:
         # Switch the networks
-        QLearning.switchQNetworks()
+        qLearning.switchQNetworks()
 
 
     # If the state is a terminal state then the episode has ended, plot score of episode
@@ -258,20 +174,16 @@ while 1:
         else:
             qValueRollingAverage = qMaxAverage
 
-        print(globalVariables.score, QLearning.epsilon, globalVariables.numberOfSteps, "Rolling average max Q-value:", qValueRollingAverage)
+        print(globalVariables.score, qLearning.epsilon, globalVariables.numberOfSteps, "Rolling average max Q-value:", qValueRollingAverage)
         #plotStatistics(fig, ax, line1, qValueRollingAverage, ax2, line2)
 
         globalVariables.score = 0
         globalVariables.qBuffer = []
-        window_pixel_matrix = pygame.surfarray.pixels3d(globalVariables.screen)
-        screen = torch.from_numpy(np.copy(window_pixel_matrix))
-        stackedFrames = QLearning.initializeState(screen)
-
-    #plotFrame(stackedFrames)
-    #plt.pause(1)
+        frame = snake.getGameFrame(pygame)
+        stackedFrames = qLearning.initializeState(frame)
 
 
-    if QLearning.epsilon == 0: # or globalVariables.numberOfEpisodes >= 40000:
+    if qLearning.epsilon == 0:
         clock.tick(10)
 
     #clock.tick(globalVariables.fps) # Use for rendering and showing the game

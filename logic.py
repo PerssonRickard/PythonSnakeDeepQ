@@ -1,5 +1,6 @@
 import random
 import globalVariables
+import pygame
 
 
 def update():
@@ -31,7 +32,7 @@ def update():
         reward = reward + 1
         print("Got apple!")
     elif isGameOver:
-        reward = reward - 10
+        reward = reward - 1
 
     isTerminalState = False
     if isGameOver:
@@ -171,5 +172,19 @@ def checkIfSnakeListFeasible(snake_list):
 
     return isFeasible
 
+def handleKeyboardInput(event):
+    if event.type == pygame.KEYDOWN:
+        if event.key == pygame.K_LEFT:
+            if globalVariables.snake_direction != 1:
+                globalVariables.pending_snake_direction = 3
+        elif event.key == pygame.K_RIGHT:
+            if globalVariables.snake_direction != 3:
+                globalVariables.pending_snake_direction = 1
+        elif event.key == pygame.K_UP:
+            if globalVariables.snake_direction != 2:
+                globalVariables.pending_snake_direction = 0
+        elif event.key == pygame.K_DOWN:
+            if globalVariables.snake_direction != 0:
+                globalVariables.pending_snake_direction = 2
 
 

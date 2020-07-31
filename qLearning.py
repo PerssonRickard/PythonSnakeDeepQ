@@ -4,63 +4,121 @@ import torch.optim as optim
 import torch.nn as nn
 import torch.nn.functional as F
 import globalVariables
+import matplotlib.pyplot as plt
 
 class ReplayMemory:
-    def __init__(self, memorySize, device):
+    def __init__(self, memorySize, device, downSampleWidth=116, downSampleHeight=94, fastImplementation=True):
         self.memorySize = memorySize
         self.device = device
+        self.downSampleWidth = downSampleWidth
+        self.downSampleHeight = downSampleHeight
+        self.fastImplementation = fastImplementation
         
-        self.states = torch.empty((memorySize, 4, globalVariables.downSampleWidth, globalVariables.downSampleHeight)).to(self.device)
-        self.actions = torch.empty(memorySize, dtype=torch.int8).to(self.device)
-        self.rewards = torch.empty(memorySize).to(self.device)
-        self.nextStates = torch.empty((memorySize, 4, globalVariables.downSampleWidth, globalVariables.downSampleHeight)).to(self.device)
-        self.isTerminalStates = torch.empty(memorySize, dtype=torch.bool).to(self.device)
+        if fastImplementation:
+            self.states = torch.empty((int(memorySize), 4, downSampleWidth, downSampleHeight)).to(self.device)
+            self.actions = torch.empty(int(memorySize), dtype=torch.int8).to(self.device)
+            self.rewards = torch.empty(int(memorySize)).to(self.device)
+            self.nextStates = torch.empty((int(memorySize), 4, downSampleWidth, downSampleHeight)).to(self.device)
+            self.isTerminalStates = torch.empty(int(memorySize), dtype=torch.bool).to(self.device)
+            self.elementToRemove = 0
+        else:
+            self.memory = []
         
         self.currentSize = 0
 
     def addTransition(self, state, action, reward, nextState, isTerminalState):
         state = state.to(self.device)
-        action = torch.tensor([action], dtype=torch.int8).to(self.device)
-        reward = torch.tensor([reward], dtype=torch.float32).to(self.device)
-        nextState = nextState.to(self.device)
-        isTerminalState = torch.tensor([isTerminalState], dtype=torch.bool).to(self.device)
 
-        if self.currentSize >= self.memorySize:
-            self.states = torch.roll(self.states, -1, dims=0)
-            self.actions = torch.roll(self.actions, -1, dims=0)
-            self.rewards = torch.roll(self.rewards, -1, dims=0)
-            self.nextStates = torch.roll(self.nextStates, -1, dims=0)
-            self.isTerminalStates = torch.roll(self.isTerminalStates, -1, dims=0)
+        if self.fastImplementation:
+            action = torch.tensor([action], dtype=torch.int8).to(self.device)
+            reward = torch.tensor([reward], dtype=torch.float32).to(self.device)
+            nextState = nextState.to(self.device)
+            isTerminalState = torch.tensor([isTerminalState], dtype=torch.bool).to(self.device)
 
-            self.states[-1,:,:,:] = state
-            self.actions[-1] = action
-            self.rewards[-1] = reward
-            self.nextStates[-1,:,:,:] = nextState
-            self.isTerminalStates[-1] = isTerminalState
+            if self.currentSize >= self.memorySize:
+                '''
+                self.states = torch.roll(self.states, -1, dims=0)
+                self.actions = torch.roll(self.actions, -1, dims=0)
+                self.rewards = torch.roll(self.rewards, -1, dims=0)
+                self.nextStates = torch.roll(self.nextStates, -1, dims=0)
+                self.isTerminalStates = torch.roll(self.isTerminalStates, -1, dims=0)
+
+                self.states[-1,:,:,:] = state
+                self.actions[-1] = action
+                self.rewards[-1] = reward
+                self.nextStates[-1,:,:,:] = nextState
+                self.isTerminalStates[-1] = isTerminalState
+                '''
+
+                self.states[self.elementToRemove,:,:,:] = state
+                self.actions[self.elementToRemove] = action
+                self.rewards[self.elementToRemove] = reward
+                self.nextStates[self.elementToRemove,:,:,:] = nextState
+                self.isTerminalStates[self.elementToRemove] = isTerminalState
+
+                if self.elementToRemove >= self.memorySize-1:
+                    self.elementToRemove = 0
+                else:
+                    self.elementToRemove = self.elementToRemove + 1
+            else:
+                self.states[self.currentSize,:,:,:] = state
+                self.actions[self.currentSize] = action
+                self.rewards[self.currentSize] = reward
+                self.nextStates[self.currentSize,:,:,:] = nextState
+                self.isTerminalStates[self.currentSize] = isTerminalState
+
+                self.currentSize = self.currentSize + 1
         else:
-            self.states[self.currentSize,:,:,:] = state
-            self.actions[self.currentSize] = action
-            self.rewards[self.currentSize] = reward
-            self.nextStates[self.currentSize,:,:,:] = nextState
-            self.isTerminalStates[self.currentSize] = isTerminalState
+            if len(self.memory) >= self.memorySize:
+                temp = self.memory[1:]
+            else:
+                temp = self.memory
+                self.currentSize = self.currentSize + 1
 
-            self.currentSize = self.currentSize + 1
+            temp.append([state,
+                        action,
+                        reward,
+                        nextState,
+                        isTerminalState])
 
+            self.memory = temp
 
     def sampleMiniBatch(self, miniBatchSize):
-        sampledIndices = np.random.choice(self.actions.shape[0], miniBatchSize, replace=False)
+        sampledIndices = np.random.choice(self.currentSize, miniBatchSize, replace=False)
 
-        states = self.states[sampledIndices,:,:,:]
-        actions = self.actions[sampledIndices]
-        rewards = self.rewards[sampledIndices]
-        nextStates = self.nextStates[sampledIndices,:,:,:]
-        isTerminalStates = self.isTerminalStates[sampledIndices]
+        if self.fastImplementation:
+            states = self.states[sampledIndices,:,:,:]
+            actions = self.actions[sampledIndices]
+            rewards = self.rewards[sampledIndices]
+            nextStates = self.nextStates[sampledIndices,:,:,:]
+            isTerminalStates = self.isTerminalStates[sampledIndices]
 
-        return (states,
-                actions,
-                rewards,
-                nextStates,
-                isTerminalStates)
+            return (states,
+                    actions,
+                    rewards,
+                    nextStates,
+                    isTerminalStates)
+        else:
+            states = torch.zeros((miniBatchSize, 4, self.downSampleWidth, self.downSampleHeight)).to(self.device)
+            actions = torch.zeros(miniBatchSize, dtype=torch.int8).to(self.device)
+            rewards = torch.zeros(miniBatchSize).to(self.device)
+            nextStates = torch.zeros((miniBatchSize, 4, self.downSampleWidth, self.downSampleHeight)).to(self.device)
+            isTerminalStates = torch.zeros(miniBatchSize, dtype=torch.bool).to(self.device)
+
+            for i in range(miniBatchSize):
+                memoryIndex = sampledIndices[i]
+
+                states[i,:,:,:] = self.memory[memoryIndex][0]
+                actions[i] = self.memory[memoryIndex][1]
+                rewards[i] = self.memory[memoryIndex][2]
+                nextStates[i,:,:,:] = self.memory[memoryIndex][3]
+                isTerminalStates[i] = self.memory[memoryIndex][4]
+
+            return (states,
+                    actions,
+                    rewards,
+                    nextStates,
+                    isTerminalStates)
 
 
 class QLearning:
@@ -229,3 +287,57 @@ class QLearning:
 
     def stepEpsilon(self):
         self.epsilon = max(self.epsilon - self.epsilonStep, self.endingEpsilon)
+
+    def train(self, replayMemory):
+
+        # Sample a mini-batch of experience
+        sampledMiniBatch = replayMemory.sampleMiniBatch(self.miniBatchSize)
+
+        # Calculate the Q-learning targets
+        qLearningTargets = self.calculateQLearningTargets(sampledMiniBatch)
+
+        # Extract components of the mini-batch
+        states = sampledMiniBatch[0]
+        actions = sampledMiniBatch[1]
+
+        # Zero the optimizer gradients
+        self.zeroOptimizerGrad()
+
+        # Perform a forward-pass of the Q-network
+        qValuesAll = self.forwardProp(states)
+
+        # Only keep the Q-values corresponding to actions that we actually did take
+        qValues = torch.zeros(self.miniBatchSize).to(self.device)
+        for i in range(self.miniBatchSize):
+            action = actions[i]
+            qValues[i] = qValuesAll[i, action]
+
+        # Compute the loss
+        loss = self.lossFunction(qValues, qLearningTargets)
+
+        # Perform backpropagation to obtain the gradients
+        loss.backward()
+
+        # Perform an update step of the Q-network
+        self.stepOptimizer()
+
+
+    def plotFrame(self, frame):
+        # Used for debugging, plots the given frame
+
+        if frame.size(1) == 1:
+            plt.imshow(frame.squeeze(), cmap='gray')
+            plt.show()
+        else:
+            fig=plt.figure(figsize=(1, 4))
+
+            fig.add_subplot(1, 4, 1)
+            plt.imshow(frame[:,0,:,:].squeeze(), cmap='gray')
+            fig.add_subplot(1, 4, 2)
+            plt.imshow(frame[:,1,:,:].squeeze(), cmap='gray')
+            fig.add_subplot(1, 4, 3)
+            plt.imshow(frame[:,2,:,:].squeeze(), cmap='gray')
+            fig.add_subplot(1, 4, 4)
+            plt.imshow(frame[:,3,:,:].squeeze(), cmap='gray')
+
+            plt.show()
