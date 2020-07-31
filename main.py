@@ -58,7 +58,7 @@ else:
 
 # Parameter settings
 discountFactor = 0.95
-startingEpsilon = 0.1
+startingEpsilon = 0.01
 endingEpsilon = 0.01
 numberStepsDecreasingEpsilon = 1e5 #1000000
 replayMemorySize = 1e4 #2500
@@ -174,14 +174,14 @@ while 1:
         else:
             qValueRollingAverage = qMaxAverage
 
-        print(globalVariables.score, qLearning.epsilon, globalVariables.numberOfSteps, "Rolling average max Q-value:", qValueRollingAverage)
+        print("Game over, Episode number:", globalVariables.numberOfEpisodes, '\t', globalVariables.score, 
+            '\t', qLearning.epsilon, '\t', globalVariables.numberOfSteps, '\t', "Rolling average max Q-value:", qValueRollingAverage)
         #plotStatistics(fig, ax, line1, qValueRollingAverage, ax2, line2)
 
         globalVariables.score = 0
         globalVariables.qBuffer = []
         frame = snake.getGameFrame(pygame)
         stackedFrames = qLearning.initializeState(frame)
-
 
     if qLearning.epsilon == 0:
         clock.tick(10)

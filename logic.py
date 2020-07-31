@@ -30,14 +30,13 @@ def update():
     reward = 0 #-0.05 #-0.005
     if ateApple:
         reward = reward + 1
-        print("Got apple!")
+        #print("Got apple!")
     elif isGameOver:
         reward = reward - 1
 
     isTerminalState = False
     if isGameOver:
         isTerminalState = True
-        print("Game over, Episode number:", globalVariables.numberOfEpisodes)
         globalVariables.numberOfEpisodes = globalVariables.numberOfEpisodes + 1
         resetGame()
 
