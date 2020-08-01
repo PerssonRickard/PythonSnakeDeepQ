@@ -20,6 +20,7 @@ conda activate snakeDeepQ
 ```
 
 ### Running the code
+When you have activated the environment you can run the code by typing:
 ```
 python main.py
 ```
