@@ -9,6 +9,7 @@ The installation steps will be presented in the context of a Windows operating s
 A simple and quick way to install the requirements for the project is to make use of the environment.yml file included in the repository. To use this file you need to install Anaconda which is available for Windows, MacOS and Linux at: https://www.anaconda.com/.
 
 ### Creating an environment with the required libraries
+Once you have installed Anaconda you can create an environment which includes the required libraries by running the following command:
 ```
 conda env create -f environment.yml
 ```
