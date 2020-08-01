@@ -26,3 +26,4 @@ python main.py
 ```
 
 ## Demo
+![](demoFinal.gif)
