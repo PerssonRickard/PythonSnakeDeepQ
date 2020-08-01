@@ -11,12 +11,9 @@ import torchvision
 import torchvision.transforms as transforms
 import torch.nn as nn
 import torch.nn.functional as F
-from PIL import Image
-#from skimage.transform import resize
 import numpy as np
 import matplotlib.pyplot as plt
 import torch.optim as optim
-from collections import deque
 from qLearning import ReplayMemory, QLearning
 
 pygame.init()
@@ -52,19 +49,19 @@ class DeepQNetwork(nn.Module):
 
 # Load a pretrained network
 if globalVariables.pretrained:
-    pretrainedPath = 'savedNetworks/network12times8Final3.pt'
+    pretrainedPath = 'savedNetworks/network12times8Final4.pt'
 else:
     pretrainedPath = None
 
 # Parameter settings
 discountFactor = 0.95
-startingEpsilon = 0.01
-endingEpsilon = 0.01
-numberStepsDecreasingEpsilon = 1e5 #1000000
-replayMemorySize = 1e4 #2500
-numberStepsSwitchQNetwork = 512 #2500
+startingEpsilon = 0.1
+endingEpsilon = 0.1
+numberStepsDecreasingEpsilon = 1e5
+replayMemorySize = 2500
+numberStepsSwitchQNetwork = 512
 miniBatchSize = 32
-learningRate = 1e-4 #1e-5
+learningRate = 1e-4
 downSampleWidth = 116
 downSampleHeight = 94
 
