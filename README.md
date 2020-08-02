@@ -26,3 +26,6 @@ python main.py
 ```
 
 ## Demo
+<p align="center">
+  <img src="demoFinal.gif" width="400"/>
+</p>
