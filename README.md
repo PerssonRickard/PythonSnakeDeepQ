@@ -26,4 +26,4 @@ python main.py
 ```
 
 ## Demo
-![](demoFinal.gif | width=100)
+![](demoFinal.gif | width="100")
