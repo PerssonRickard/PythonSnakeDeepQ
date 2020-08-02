@@ -26,7 +26,7 @@ python main.py
 ```
 
 ## Demo
-Initally the agent chooses actions based on a ε-greedy policy which means that it takes a random action with probability ε and otherwise the greedy action. This is to ensure that the agent explores the environment sufficiently as to not end up using a sub-optimal policy. In the image below it can be seen how the agent essentially chooses actions completely random at the start of the training process.
+Initally the agent chooses actions based on an ε-greedy policy which means that it takes a random action with probability ε and otherwise the greedy action. This is to ensure that the agent explores the environment sufficiently as to not end up using a sub-optimal policy. In the image below it can be seen how the agent essentially chooses actions completely random at the start of the training process.
 
 <p align="center">
   <img src="demoStart.gif" width="400"/>
