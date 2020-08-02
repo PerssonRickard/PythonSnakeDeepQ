@@ -26,4 +26,4 @@ python main.py
 ```
 
 ## Demo
-<img src="demoFinal.gif" width="400"/>
+<img src="demoFinal.gif" width="300"/>
