@@ -49,13 +49,13 @@ class DeepQNetwork(nn.Module):
 
 # Load a pretrained network
 if globalVariables.pretrained:
-    pretrainedPath = 'savedNetworks/network12times8Final4.pt'
+    pretrainedPath = 'savedNetworks/networkFinal.pt'
 else:
     pretrainedPath = None
 
 # Parameter settings
 discountFactor = 0.95
-startingEpsilon = 0.1
+startingEpsilon = 1
 endingEpsilon = 0.1
 numberStepsDecreasingEpsilon = 1e5
 replayMemorySize = 2500
@@ -181,7 +181,7 @@ while 1:
         stackedFrames = qLearning.initializeState(frame)
 
     if qLearning.epsilon == 0:
-        clock.tick(10)
+        clock.tick(12)
 
     #clock.tick(globalVariables.fps) # Use for rendering and showing the game
     clock.tick() # Don't delay framerate when not rendering

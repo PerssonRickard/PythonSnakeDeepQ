@@ -28,4 +28,4 @@ numberOfSteps = 0
 #fig = None
 #ax = None
 
-pretrained = True
+pretrained = False
