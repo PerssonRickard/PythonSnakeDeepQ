@@ -29,13 +29,13 @@ python main.py
 Initally the agent chooses actions based on an ε-greedy policy which means that it takes a random action with probability ε and otherwise the greedy action. This is to ensure that the agent explores the environment sufficiently as to not end up using a sub-optimal policy. In the image below it can be seen how the agent essentially chooses actions completely random at the start of the training process.
 
 <p align="center">
-  <img src="demoStart.gif" width="400"/>
+  <img src="demoImages/demoStart.gif" width="400"/>
 </p>
 
 After training for a sufficiently long time the agent learns to avoid the edges and to move towards the objective which can be seen in the image below.
 
 <p align="center">
-  <img src="demoFinal.gif" width="400"/>
+  <img src="demoImages/demoFinal.gif" width="400"/>
 </p>
 
 ## Conclusion
